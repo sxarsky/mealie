@@ -1,5 +1,8 @@
 <template>
-  <div class="search-container pb-8">
+  <div
+    class="search-container pb-8"
+    :data-search-synced="state.search"
+  >
     <form
       class="search-box pa-2"
       @submit.prevent="search"
@@ -7,6 +10,7 @@
       <div class="d-flex justify-center mb-2">
         <v-text-field
           ref="input"
+          data-testid="explorer-search-input"
           v-model="state.search"
           variant="outlined"
           hide-details
