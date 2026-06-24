@@ -2,6 +2,7 @@
   <div
     ref="el"
     :class="isOverDropZone ? 'over' : ''"
+    :data-upload-state="uploadState"
   >
     <div
       v-if="isOverDropZone"
@@ -22,10 +23,18 @@
 <script setup lang="ts">
 import { useDropZone } from "@vueuse/core";
 
-defineProps({
+type UploadState = "idle" | "uploading" | "done" | "error";
+
+const props = defineProps({
   disabled: {
     type: Boolean,
     default: false,
+  },
+  // Lifecycle state driven by the parent's drop handler.
+  // While a file is dragged over the zone this is overridden by "dragging".
+  state: {
+    type: String as PropType<UploadState>,
+    default: "idle",
   },
 });
 
@@ -40,6 +49,8 @@ function onDrop(files: File[] | null) {
 }
 
 const { isOverDropZone } = useDropZone(el, files => onDrop(files));
+
+const uploadState = computed(() => (isOverDropZone.value ? "dragging" : props.state));
 </script>
 
 <style lang="css">
