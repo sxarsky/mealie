@@ -61,6 +61,7 @@
       :items="data || []"
       :items-per-page="15"
       :search="search"
+      :row-props="rowProps"
       class="elevation-2"
     >
       <template
@@ -220,6 +221,10 @@ const bulkActionListener = computed(() => {
 });
 
 const search = ref("");
+
+function rowProps({ item }: { item: any }) {
+  return { "data-row-id": item?.id };
+}
 </script>
 
 <style>
