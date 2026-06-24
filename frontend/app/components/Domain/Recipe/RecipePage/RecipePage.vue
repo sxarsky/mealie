@@ -98,18 +98,38 @@
               <div v-if="!$vuetify.display.mdAndUp">
                 <RecipePageOrganizers v-model="recipe" />
               </div>
-              <RecipeNotes v-model="recipe.notes" :edit="isEditForm" />
+              <v-expansion-panels v-if="recipe.notes && recipe.notes.length > 0 || isEditForm" class="mt-8">
+                <v-expansion-panel>
+                  <v-expansion-panel-title class="text-h5 font-weight-medium">
+                    {{ $t("recipe.note") }}
+                  </v-expansion-panel-title>
+                  <v-expansion-panel-text>
+                    <RecipeNotes v-model="recipe.notes" :edit="isEditForm" />
+                  </v-expansion-panel-text>
+                </v-expansion-panel>
+              </v-expansion-panels>
             </v-col>
           </v-row>
           <RecipePageFooter v-model="recipe" />
         </v-card-text>
       </v-card>
       <WakelockSwitch />
-      <RecipePageComments
+      <v-expansion-panels
         v-if="!recipe.settings?.disableComments && !isEditForm && !isCookMode"
-        v-model="recipe"
-        class="px-1 my-4 d-print-none"
-      />
+        class="my-4 d-print-none"
+      >
+        <v-expansion-panel>
+          <v-expansion-panel-title class="text-h5 font-weight-medium">
+            {{ $t("recipe.comments") }}
+          </v-expansion-panel-title>
+          <v-expansion-panel-text>
+            <RecipePageComments
+              v-model="recipe"
+              class="px-1"
+            />
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+      </v-expansion-panels>
       <RecipePrintContainer :recipe="recipe" :scale="scale" />
     </v-container>
     <!-- Cook mode displayes two columns with ingredients and instructions side by side, each being scrolled individually, allowing to view both at the same time -->
