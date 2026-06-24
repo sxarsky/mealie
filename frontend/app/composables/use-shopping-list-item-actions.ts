@@ -1,5 +1,6 @@
 import { useLocalStorage, useOnline } from "@vueuse/core";
 import { useUserApi } from "~/composables/api";
+import { alert } from "~/composables/use-toast";
 import type { ShoppingListItemOut, ShoppingListOut } from "~/lib/api/types/household";
 import type { RequestResponse } from "~/lib/api/types/non-generated";
 
@@ -222,6 +223,7 @@ export function useShoppingListItemActions(shoppingListId: string) {
     catch (error) {
       console.log(`Error processing queue items of type ${itemQueueType}:`, error);
       clearQueueItems(itemQueueType);
+      alert.error("Couldn't save your shopping list change. The item has been reverted.");
       return false;
     }
 
