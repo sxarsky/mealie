@@ -105,6 +105,24 @@
         @toggle-dense-view="toggleMobileCards()"
       />
     </v-row>
+    <div
+      v-if="loading && !ready"
+      data-testid="recipe-grid-skeleton"
+      class="mt-2"
+    >
+      <v-row>
+        <v-col
+          v-for="n in 8"
+          :key="n"
+          :sm="6"
+          :md="6"
+          :lg="4"
+          :xl="3"
+        >
+          <v-skeleton-loader type="card" />
+        </v-col>
+      </v-row>
+    </div>
     <div v-if="recipes && ready">
       <div class="mt-2">
         <v-row v-if="!useMobileCards">
