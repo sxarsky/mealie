@@ -154,6 +154,22 @@
       </div>
       <v-card v-intersect="infiniteScroll" variant="flat" />
     </div>
+    <div
+      v-if="ready && !loading && recipes.length === 0"
+      data-testid="recipe-explorer-empty"
+      class="d-flex flex-column align-center justify-center text-center py-12"
+    >
+      <v-icon
+        size="64"
+        class="mb-3"
+        color="grey"
+      >
+        {{ $globals.icons.silverwareForkKnife }}
+      </v-icon>
+      <p class="text-h6 mb-1">
+        {{ $t("search.no-results") }}
+      </p>
+    </div>
     <v-fade-transition>
       <AppLoader
         v-if="loading"
