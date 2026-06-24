@@ -67,6 +67,7 @@
               :color="color"
               type="submit"
               :disabled="submitDisabled"
+              :data-testid="confirmTestid ?? undefined"
               @click="
                 emit('confirm');
                 dialog = false;
@@ -125,6 +126,7 @@ interface DialogProps {
   canConfirm?: boolean;
   canSubmit?: boolean;
   disableSubmitOnEnter?: boolean;
+  confirmTestid?: string | null;
 }
 
 interface DialogEmits {
@@ -156,6 +158,7 @@ const props = withDefaults(defineProps<DialogProps>(), {
   canConfirm: false,
   canSubmit: false,
   disableSubmitOnEnter: false,
+  confirmTestid: null,
 });
 const emit = defineEmits<DialogEmits>();
 

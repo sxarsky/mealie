@@ -65,6 +65,7 @@
               density="comfortable"
               :label="inputField.label"
               :name="inputField.varName"
+              :data-testid="inputField.dataTestid ?? undefined"
               :hint="inputField.hint || ''"
               :rules="!(inputField.disableUpdate && updateMode) ? inputField.rules || [] : []"
               validate-on="input"
