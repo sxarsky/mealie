@@ -210,6 +210,7 @@ import MultiPurposeLabel from "~/components/Domain/ShoppingList/MultiPurposeLabe
 import { useLocales } from "~/composables/use-locales";
 import { normalizeFilter } from "~/composables/use-utils";
 import { useFoodStore, useLabelStore } from "~/composables/store";
+import { alert } from "~/composables/use-toast";
 import type { MultiPurposeLabelOut } from "~/lib/api/types/labels";
 import type { AutoFormItems } from "~/types/auto-forms";
 import type { TableHeaders, TableConfig } from "~/components/global/CrudTable.vue";
@@ -495,6 +496,7 @@ async function assignSelected() {
   if (!bulkAssignLabelId.value) {
     return;
   }
+  const assignedCount = bulkAssignTarget.value.length;
   for (const item of bulkAssignTarget.value) {
     item.labelId = bulkAssignLabelId.value;
     await foodStore.actions.updateOne(item);
@@ -502,5 +504,6 @@ async function assignSelected() {
   bulkAssignTarget.value = [];
   bulkAssignLabelId.value = undefined;
   foodStore.actions.refresh();
+  alert.success(i18n.t("data-pages.labels.assign-label-success", { count: assignedCount }));
 }
 </script>
