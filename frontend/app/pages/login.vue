@@ -49,7 +49,7 @@
         dark
       >
         <v-toolbar-title class="text-h4 text-center">
-          Mealie
+          {{ $t("user.brand-name") }}
         </v-toolbar-title>
       </v-toolbar>
       <AppLogo :size="100" />
