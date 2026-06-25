@@ -172,6 +172,7 @@ const headers = [
   { title: i18n.t("household.household"), value: "household" },
   { title: i18n.t("user.auth-method"), value: "authMethod" },
   { title: i18n.t("user.admin"), value: "admin" },
+  { title: i18n.t("user.last-login"), value: "cachedLastLogin" },
   { title: i18n.t("general.delete"), value: "actions", sortable: false, align: "center" },
 ];
 
