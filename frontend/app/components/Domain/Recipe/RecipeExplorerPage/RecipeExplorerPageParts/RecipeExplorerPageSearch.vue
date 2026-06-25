@@ -12,6 +12,7 @@
           hide-details
           clearable
           color="primary"
+          data-testid="explorer-search-input"
           :placeholder="$t('search.search-placeholder')"
           :prepend-inner-icon="$globals.icons.search"
           @keyup.enter="hideKeyboard"
