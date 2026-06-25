@@ -16,6 +16,8 @@
       <div
         v-for="(ingredient, index) in value"
         :key="'ingredient' + index"
+        :data-testid="`ingredient-cell-${ingredient.referenceId || index}`"
+        :data-ingredient-id="ingredient.referenceId"
       >
         <h3
           v-if="showTitleEditor[index]"

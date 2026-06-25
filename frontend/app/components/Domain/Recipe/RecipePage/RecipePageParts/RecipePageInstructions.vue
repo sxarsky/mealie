@@ -299,6 +299,8 @@
               <DropZone @drop="(f) => handleImageDrop(index, f)">
                 <v-card-text
                   v-if="isEditForm"
+                  :data-testid="`instruction-edit-${step.id}`"
+                  :data-instruction-id="step.id"
                   @click="$emit('click-instruction-field', `${index}.text`)"
                 >
                   <MarkdownEditor
@@ -356,7 +358,10 @@
                         v-if="isCookMode && step.ingredientReferences && step.ingredientReferences.length > 0 && $vuetify.display.smAndUp"
                         vertical
                       />
-                      <v-col>
+                      <v-col
+                        :data-testid="`instruction-cell-${step.id}`"
+                        :data-instruction-id="step.id"
+                      >
                         <SafeMarkdown
                           class="markdown"
                           :source="step.text"
