@@ -1,141 +1,57 @@
 <template>
   <div class="search-container pb-8">
-    <form
-      class="search-box pa-2"
-      @submit.prevent="search"
+    <v-card
+      class="explorer-search-card pa-2"
+      flat
     >
-      <div class="d-flex justify-center mb-2">
-        <v-text-field
-          ref="input"
-          data-testid="explorer-search-input"
-          v-model="state.search"
-          variant="outlined"
-          hide-details
-          clearable
-          color="primary"
-          :placeholder="$t('search.search-placeholder')"
-          :prepend-inner-icon="$globals.icons.search"
-          @keyup.enter="hideKeyboard"
-        />
-      </div>
-      <div class="search-row">
-        <RecipeExplorerPageSearchFilters />
-        <!-- Sort Options -->
-        <v-menu
-          offset-y
-          nudge-bottom="3"
-        >
-          <template #activator="{ props }">
-            <v-btn
-              class="ml-auto"
-              size="small"
-              color="accent"
-              v-bind="props"
-            >
-              <v-icon :start="!$vuetify.display.xs">
-                {{ state.orderDirection === "asc" ? $globals.icons.sortDescending : $globals.icons.sortAscending }}
-              </v-icon>
-              {{ $vuetify.display.xs ? null : sortText }}
-            </v-btn>
-          </template>
-          <v-card>
-            <v-list>
-              <v-list-item
-                slim
-                density="comfortable"
-                :prepend-icon="state.orderDirection === 'asc' ? $globals.icons.sortAscending : $globals.icons.sortDescending"
-                :title="state.orderDirection === 'asc' ? $t('general.sort-descending') : $t('general.sort-ascending')"
-                @click="toggleOrderDirection"
-              />
-              <v-divider />
-              <v-list-item
-                v-for="v in sortable"
-                :key="v.name"
-                :active="state.orderBy === v.value"
-                slim
-                density="comfortable"
-                @click="v.value === 'random' ? setRandomOrderByWrapper() : setOrderBy(v.value)"
-              >
-                <template #prepend>
-                  <v-icon>{{ v.icon }}</v-icon>
-                </template>
-
-                <template #title>
-                  <span>{{ v.name }}</span>
-                  <v-icon
-                    v-if="v.value === 'random' && showRandomLoading"
-                    size="small"
-                    class="ml-3"
-                  >
-                    {{ $globals.icons.refreshCircle }}
-                  </v-icon>
-                </template>
-              </v-list-item>
-            </v-list>
-          </v-card>
-        </v-menu>
-
-        <!-- Settings -->
-        <v-menu
-          offset-y
-          bottom
-          start
-          nudge-bottom="3"
-          :close-on-content-click="false"
-        >
-          <template #activator="{ props }">
-            <v-btn
-              size="small"
-              color="accent"
-              dark
-              v-bind="props"
-            >
-              <v-icon size="small">
-                {{ $globals.icons.cog }}
-              </v-icon>
-            </v-btn>
-          </template>
-          <v-card>
-            <v-card-text>
-              <v-switch
-                v-model="state.auto"
-                :label="$t('search.auto-search')"
-                single-line
-                color="primary"
-              />
-              <v-btn
-                block
-                color="primary"
-                @click="reset"
-              >
-                {{ $t("general.reset") }}
-              </v-btn>
-            </v-card-text>
-          </v-card>
-        </v-menu>
-      </div>
-      <div
-        v-if="!state.auto"
-        class="search-button-container"
+      <RecipeExplorerPageSearchInput
+        v-model="state.search"
+        @submit="search"
+      />
+      <v-toolbar
+        class="explorer-search-toolbar"
+        color="transparent"
+        flat
       >
-        <v-btn
-          size="x-large"
-          color="primary"
-          type="submit"
-          block
-        >
-          <v-icon start>
-            {{ $globals.icons.search }}
-          </v-icon>
-          {{ $t("search.search") }}
-        </v-btn>
-      </div>
-    </form>
+        <RecipeExplorerPageSearchFilters />
+        <v-spacer />
+        <RecipeExplorerPageSortMenu
+          :order-by="state.orderBy"
+          :order-direction="state.orderDirection"
+          :sort-text="sortText"
+          :sortable="sortable"
+          :show-random-loading="showRandomLoading"
+          @toggle-order-direction="toggleOrderDirection"
+          @set-order-by="setOrderBy"
+          @set-random-order-by="setRandomOrderByWrapper"
+        />
+        <RecipeExplorerPageSettingsMenu
+          v-model:auto="state.auto"
+          @reset="reset"
+        />
+      </v-toolbar>
+      <v-btn
+        v-if="!state.auto"
+        class="explorer-search-submit"
+        size="x-large"
+        color="primary"
+        block
+        @click="search"
+      >
+        <v-icon start>
+          {{ $globals.icons.search }}
+        </v-icon>
+        {{ $t("search.search") }}
+      </v-btn>
+    </v-card>
   </div>
 </template>
 
 <script setup lang="ts">
 import RecipeExplorerPageSearchFilters from "./RecipeExplorerPageSearchFilters.vue";
+import RecipeExplorerPageSearchInput from "./RecipeExplorerPageSearchInput.vue";
+import RecipeExplorerPageSortMenu from "./RecipeExplorerPageSortMenu.vue";
+import RecipeExplorerPageSettingsMenu from "./RecipeExplorerPageSettingsMenu.vue";
 import { useRecipeExplorerSearch, clearRecipeExplorerSearchState } from "~/composables/use-recipe-explorer-search";
 
 const emit = defineEmits<{
@@ -233,10 +149,7 @@ async function setRandomOrderByWrapper() {
 </script>
 
 <style scoped>
-.search-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
+.explorer-search-toolbar {
   margin-top: 1rem;
 }
 
@@ -245,11 +158,11 @@ async function setRandomOrderByWrapper() {
   justify-content: center;
 }
 
-.search-box {
+.explorer-search-card {
   width: 950px;
 }
 
-.search-button-container {
+.explorer-search-submit {
   margin: 3rem auto 0 auto;
   max-width: 500px;
 }
