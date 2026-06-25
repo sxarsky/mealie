@@ -11,8 +11,8 @@
       :content-class="top ? 'top-dialog' : undefined"
       :fullscreen="$vuetify.display.xs"
       @keydown.enter="submitOnEnter"
-      @click:outside="emit('cancel')"
-      @keydown.esc="emit('cancel')"
+      @click:outside="requestClose"
+      @keydown.esc="requestClose"
     >
       <v-card height="100%" :loading="loading">
         <template #loader="{ isActive }">
@@ -21,19 +21,18 @@
             indeterminate
           />
         </template>
-        <v-toolbar
-          dark
-          density="comfortable"
-          :color="color"
-          class="px-3 position-relative top-0 left-0 w-100"
+        <v-card-item
+          :class="`bg-${color} px-3 position-relative top-0 left-0 w-100`"
         >
-          <v-icon size="large">
-            {{ icon }}
-          </v-icon>
-          <v-toolbar-title class="headline">
+          <template #prepend>
+            <v-icon size="large">
+              {{ icon }}
+            </v-icon>
+          </template>
+          <v-card-title class="dialog-header-title headline">
             {{ title }}
-          </v-toolbar-title>
-        </v-toolbar>
+          </v-card-title>
+        </v-card-item>
 
         <div style="flex: 1 1 auto; min-height: 0; overflow: auto">
           <slot v-bind="{ submitEvent }" />
@@ -42,15 +41,12 @@
         <v-spacer />
         <v-divider />
 
-        <v-card-actions :class="$vuetify.display.xs ? 'pb-4' : 'undefined'">
+        <v-card-actions class="dialog-action-bar" :class="$vuetify.display.xs ? 'pb-4' : 'undefined'">
           <slot name="card-actions">
             <v-btn
               variant="text"
               color="grey"
-              @click="
-                dialog = false;
-                emit('cancel');
-              "
+              @click="requestClose"
             >
               {{ cancelText }}
             </v-btn>
@@ -181,6 +177,11 @@ watch(dialog, (val) => {
   if (val) submitted.value = false;
   if (!val) emit("close");
 });
+
+function requestClose() {
+  dialog.value = false;
+  emit("cancel");
+}
 
 function submitEvent() {
   emit("submit");
