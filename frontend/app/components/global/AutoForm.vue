@@ -67,6 +67,8 @@
               :name="inputField.varName"
               :hint="inputField.hint || ''"
               :rules="!(inputField.disableUpdate && updateMode) ? inputField.rules || [] : []"
+              :error-messages="serverErrors?.[inputField.varName]"
+              :data-testid="fieldTestidPrefix ? `${fieldTestidPrefix}-${inputField.varName}` : undefined"
               validate-on="input"
             />
 
@@ -182,6 +184,16 @@ const props = defineProps({
   readonlyFields: {
     default: null,
     type: Array as () => string[],
+  },
+  // Server-side field errors keyed by varName, merged into the same
+  // inline error slot as the client-side :rules validation.
+  serverErrors: {
+    default: null,
+    type: Object as () => Record<string, string> | null,
+  },
+  fieldTestidPrefix: {
+    default: null,
+    type: String,
   },
 });
 
