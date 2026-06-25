@@ -167,10 +167,19 @@ async function handleEdit(editFormData: MultiPurposeLabelSummary) {
 
 // ============================================================
 // Bulk Actions
-async function handleBulkAction(event: string, items: MultiPurposeLabelSummary[]) {
+interface BulkDeleteRunner {
+  onItemSettled: (id: string | number, ok: boolean) => void;
+  onComplete: (tally: { succeeded: (string | number)[]; failed: (string | number)[]; total: number }) => void;
+}
+
+async function handleBulkAction(event: string, items: MultiPurposeLabelSummary[], runner?: BulkDeleteRunner) {
   if (event === "delete-selected") {
     const ids = items.filter(item => item.id != null).map(item => item.id!);
-    await labelStore.actions.deleteMany(ids);
+    // Forward each row's outcome as it settles so the dialog rollup can
+    // advance, then report the final tally instead of aborting on the
+    // first failure.
+    const tally = await labelStore.actions.deleteMany(ids, runner?.onItemSettled);
+    runner?.onComplete(tally);
   }
 }
 

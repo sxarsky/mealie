@@ -74,17 +74,47 @@
     :icon="$globals.icons.alertCircle"
     color="error"
     can-confirm
-    @confirm="$emit('bulk-action', 'delete-selected', bulkDeleteTarget)"
+    :submit-disabled="bulkDeleteRunning"
+    :keep-open="bulkDeleteRunning || bulkHasFailures"
+    data-testid="bulk-delete-dialog"
+    @confirm="runBulkDelete"
   >
     <v-card-text>
       <p class="h4">
         {{ $t('general.confirm-delete-generic-items') }}
       </p>
+      <p
+        class="mt-1 mb-2 font-weight-medium"
+        data-testid="bulk-rollup-header"
+      >
+        {{ bulkSucceededCount }} of {{ bulkDeleteTarget.length }} succeeded
+      </p>
       <v-card variant="outlined">
         <v-virtual-scroll height="400" item-height="25" :items="bulkDeleteTarget">
           <template #default="{ item }">
-            <v-list-item class="pb-2">
+            <v-list-item
+              class="pb-2"
+              :data-testid="`bulk-delete-row-${item.id}`"
+              :data-state="bulkItemState[item.id] || 'pending'"
+            >
               <v-list-item-title>{{ item.name || item.title || item.id }}</v-list-item-title>
+              <template #append>
+                <v-icon
+                  v-if="bulkItemState[item.id] === 'saved'"
+                  color="success"
+                >
+                  {{ $globals.icons.check }}
+                </v-icon>
+                <BaseButton
+                  v-else-if="bulkItemState[item.id] === 'error'"
+                  small
+                  color="error"
+                  :data-testid="`bulk-delete-retry-${item.id}`"
+                  @click="retryBulkItem(item)"
+                >
+                  {{ $t('general.retry') }}
+                </BaseButton>
+              </template>
             </v-list-item>
           </template>
         </v-virtual-scroll>
@@ -139,11 +169,17 @@ import type { AutoFormItems } from "~/types/auto-forms";
 
 const slots = useSlots();
 
+export interface BulkDeleteRunner {
+  // Called once per item as it settles, and once at the end with the full tally.
+  onItemSettled: (id: string | number, ok: boolean) => void;
+  onComplete: (tally: { succeeded: (string | number)[]; failed: (string | number)[]; total: number }) => void;
+}
+
 const emit = defineEmits<{
   (e: "deleteOne", id: string): void;
   (e: "deleteMany", ids: string[]): void;
   (e: "create-one" | "edit-one", data: any): void;
-  (e: "bulk-action", event: string, items: any[]): void;
+  (e: "bulk-action", event: string, items: any[], runner?: BulkDeleteRunner): void;
 }>();
 
 const tableHeaders = defineModel<TableHeaders[]>("tableHeaders", { required: true });
@@ -231,12 +267,71 @@ async function deleteEventHandler(item: any) {
 const bulkDeleteTarget = ref<Array<any>>([]);
 const bulkDeleteDialog = ref(false);
 
+// Per-item outcome rollup: each row tracks pending | saving | saved | error.
+const bulkItemState = ref<Record<string | number, "pending" | "saving" | "saved" | "error">>({});
+const bulkDeleteRunning = ref(false);
+
+const bulkSucceededCount = computed(() =>
+  Object.values(bulkItemState.value).filter(s => s === "saved").length,
+);
+const bulkHasFailures = computed(() =>
+  Object.values(bulkItemState.value).some(s => s === "error"),
+);
+
+function resetBulkRollup(items: Array<any>) {
+  const next: Record<string | number, "pending"> = {};
+  for (const item of items) {
+    next[item.id] = "pending";
+  }
+  bulkItemState.value = next;
+}
+
 async function bulkDeleteEventHandler(items: Array<any>) {
   bulkDeleteTarget.value = items;
+  resetBulkRollup(items);
+  bulkDeleteRunning.value = false;
   if (props.onDeleteDialogOpen) {
     await props.onDeleteDialogOpen(items);
   }
   bulkDeleteDialog.value = true;
-  console.log("Bulk Delete Event Handler", items);
+}
+
+function buildRunner(): BulkDeleteRunner {
+  return {
+    onItemSettled: (id, ok) => {
+      bulkItemState.value = { ...bulkItemState.value, [id]: ok ? "saved" : "error" };
+    },
+    onComplete: (tally) => {
+      bulkDeleteRunning.value = false;
+      // Drop the rows that succeeded; keep failed rows selected for retry.
+      const failedIds = new Set(tally.failed);
+      bulkDeleteTarget.value = bulkDeleteTarget.value.filter(item => failedIds.has(item.id));
+      if (!bulkDeleteTarget.value.length) {
+        bulkDeleteDialog.value = false;
+      }
+    },
+  };
+}
+
+function runBulkDelete() {
+  if (bulkDeleteRunning.value) {
+    return;
+  }
+  bulkDeleteRunning.value = true;
+  for (const item of bulkDeleteTarget.value) {
+    if (bulkItemState.value[item.id] !== "saved") {
+      bulkItemState.value = { ...bulkItemState.value, [item.id]: "saving" };
+    }
+  }
+  emit("bulk-action", "delete-selected", bulkDeleteTarget.value, buildRunner());
+}
+
+function retryBulkItem(item: any) {
+  if (bulkDeleteRunning.value) {
+    return;
+  }
+  bulkDeleteRunning.value = true;
+  bulkItemState.value = { ...bulkItemState.value, [item.id]: "saving" };
+  emit("bulk-action", "delete-selected", [item], buildRunner());
 }
 </script>
