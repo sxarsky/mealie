@@ -13,8 +13,10 @@
         :icon="icon"
       />
 
-      {{ toastAlert.title }}
-      {{ toastAlert.text }}
+      <span data-testid="toast-text">
+        {{ toastAlert.title }}
+        {{ toastAlert.text }}
+      </span>
 
       <template #actions>
         <v-btn
