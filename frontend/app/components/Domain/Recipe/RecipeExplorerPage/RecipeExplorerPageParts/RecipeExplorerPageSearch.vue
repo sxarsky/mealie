@@ -29,6 +29,7 @@
               class="ml-auto"
               size="small"
               color="accent"
+              data-testid="explorer-sort-menu"
               v-bind="props"
             >
               <v-icon :start="!$vuetify.display.xs">

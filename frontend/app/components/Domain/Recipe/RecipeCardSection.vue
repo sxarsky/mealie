@@ -105,7 +105,11 @@
         @toggle-dense-view="toggleMobileCards()"
       />
     </v-row>
-    <div v-if="recipes && ready">
+    <div
+      data-testid="explorer-results"
+      :data-state="resultsState"
+    >
+      <div v-if="recipes && ready">
       <div class="mt-2">
         <v-row v-if="!useMobileCards">
           <v-col
@@ -154,12 +158,13 @@
       </div>
       <v-card v-intersect="infiniteScroll" variant="flat" />
     </div>
-    <v-fade-transition>
-      <AppLoader
-        v-if="loading"
-        :loading="loading"
-      />
-    </v-fade-transition>
+      <v-fade-transition>
+        <AppLoader
+          v-if="loading"
+          :loading="loading"
+        />
+      </v-fade-transition>
+    </div>
     <AppScrollToTop />
   </div>
 </template>
@@ -230,11 +235,34 @@ const randomSeed = ref(Date.now().toString());
 const route = useRoute();
 const groupSlug = computed(() => route.params.groupSlug as string || auth.user.value?.groupSlug || "");
 
-const page = ref(1);
+// Seed the loaded-page depth from the URL so a deep link restores the same scroll depth
+const initialPage = Number.parseInt(route.query.page as string, 10);
+const page = ref(Number.isNaN(initialPage) || initialPage < 1 ? 1 : initialPage);
 const perPage = 32;
 const hasMore = ref(true);
 const ready = ref(false);
 const loading = ref(false);
+
+// Result-region state so stale cards aren't treated as current during a refetch
+const resultsState = computed(() => {
+  if (loading.value) {
+    return "loading";
+  }
+  if (ready.value && props.recipes.length === 0) {
+    return "empty";
+  }
+  return "results";
+});
+
+// Mirror the loaded-page depth into the URL without adding a history entry
+function syncPageToUrl() {
+  const current = route.query.page as string | undefined;
+  const next = page.value > 1 ? String(page.value) : undefined;
+  if (current === next) {
+    return;
+  }
+  router.replace({ query: { ...route.query, page: next } });
+}
 
 const { fetchMore, getRandom } = useLazyRecipes(isOwnGroup.value ? null : groupSlug.value);
 const { savePosition, getSavedPage, restorePosition } = useScrollPosition();
@@ -313,6 +341,8 @@ watch(
       ready.value = false;
       await initRecipes();
       ready.value = true;
+      // a filter/sort change deliberately restarts pagination at page 1
+      syncPageToUrl();
     }
   },
 );
@@ -354,6 +384,7 @@ const infiniteScroll = useThrottleFn(async () => {
   }
 
   savePosition(route.path, page.value);
+  syncPageToUrl();
 
   loading.value = false;
 }, 500);

@@ -224,6 +224,9 @@ function createRecipeExplorerSearchState(groupSlug: ComputedRef<string>): Recipe
         requireAllTags: passedQuery.value.requireAllTags ? "true" : undefined,
         requireAllTools: passedQuery.value.requireAllTools ? "true" : undefined,
         requireAllFoods: passedQuery.value.requireAllFoods ? "true" : undefined,
+        // Keep sort in the URL so a copied explorer link reproduces the same order
+        orderBy: passedQuery.value.orderBy === queryDefaults.orderBy ? undefined : passedQuery.value.orderBy,
+        orderDirection: passedQuery.value.orderDirection === queryDefaults.orderDirection ? undefined : passedQuery.value.orderDirection,
       },
     };
     await router.push({ query });
@@ -258,8 +261,20 @@ function createRecipeExplorerSearchState(groupSlug: ComputedRef<string>): Recipe
       state.value.search = queryDefaults.search;
     }
 
-    state.value.orderBy = sortPreferences.value.orderBy;
-    state.value.orderDirection = sortPreferences.value.orderDirection as "asc" | "desc";
+    // The URL is authoritative for sort; fall back to the saved preference only when absent
+    if (query.orderBy?.length) {
+      state.value.orderBy = query.orderBy as string;
+    }
+    else {
+      state.value.orderBy = sortPreferences.value.orderBy;
+    }
+
+    if (query.orderDirection?.length) {
+      state.value.orderDirection = query.orderDirection as "asc" | "desc";
+    }
+    else {
+      state.value.orderDirection = sortPreferences.value.orderDirection as "asc" | "desc";
+    }
 
     if (query.requireAllCategories?.length) {
       state.value.requireAllCategories = query.requireAllCategories === "true";
