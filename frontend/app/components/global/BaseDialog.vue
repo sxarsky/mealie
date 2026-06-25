@@ -14,7 +14,7 @@
       @click:outside="emit('cancel')"
       @keydown.esc="emit('cancel')"
     >
-      <v-card height="100%" :loading="loading">
+      <v-card height="100%" :loading="loading" data-testid="base-dialog">
         <template #loader="{ isActive }">
           <v-progress-linear
             :active="isActive"
@@ -166,6 +166,10 @@ const dialog = computed({
 
 const submitted = ref(false);
 
+// The element that had focus before the dialog opened, so we can return
+// focus to it once the dialog closes (Vuetify drops focus to <body> otherwise).
+let lastActiveElement: HTMLElement | null = null;
+
 const determineClose = computed(() => {
   return submitted.value && !props.loading && !props.keepOpen;
 });
@@ -178,8 +182,15 @@ watch(determineClose, (shouldClose) => {
 });
 
 watch(dialog, (val) => {
-  if (val) submitted.value = false;
-  if (!val) emit("close");
+  if (val) {
+    submitted.value = false;
+    lastActiveElement = document.activeElement as HTMLElement | null;
+  }
+  if (!val) {
+    emit("close");
+    lastActiveElement?.focus?.();
+    lastActiveElement = null;
+  }
 });
 
 function submitEvent() {
