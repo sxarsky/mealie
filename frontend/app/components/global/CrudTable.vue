@@ -63,6 +63,21 @@
       :search="search"
       class="elevation-2"
     >
+      <template #no-data>
+        <div
+          v-if="search && (data || []).length > 0"
+          data-testid="crud-search-no-match"
+          class="pa-4 text-center text-medium-emphasis"
+        >
+          {{ $t("search.no-results") }}
+        </div>
+        <div
+          v-else
+          class="pa-4 text-center text-medium-emphasis"
+        >
+          {{ $t("general.no-data") }}
+        </div>
+      </template>
       <template
         v-for="header in headersWithoutActions"
         #[`item.${header.value}`]="{ item }"
