@@ -1,6 +1,7 @@
 import type { ShoppingListOut, ShoppingListItemOut, ShoppingListMultiPurposeLabelOut } from "~/lib/api/types/household";
 import { useUserApi } from "~/composables/api";
 import { uuid4 } from "~/composables/use-utils";
+import { alert } from "~/composables/use-toast";
 
 /**
  * Composable for managing shopping list item CRUD operations
@@ -19,6 +20,7 @@ export function useShoppingListCrud(
 
   const createListItemData = ref<ShoppingListItemOut>(listItemFactory());
   const localLabels = ref<ShoppingListMultiPurposeLabelOut[]>();
+  const savingLabelOrder = ref(false);
 
   function listItemFactory(): ShoppingListItemOut {
     return {
@@ -212,6 +214,17 @@ export function useShoppingListCrud(
       return;
     }
 
+    // guard against a second Save firing while the first request is still in flight
+    if (savingLabelOrder.value) {
+      return;
+    }
+    savingLabelOrder.value = true;
+
+    // snapshot the order before the save so we can restore it if the request fails
+    const previousOrder = shoppingList.value.labelSettings
+      ? shoppingList.value.labelSettings.map(label => ({ ...label }))
+      : undefined;
+
     loadingCounter.value += 1;
     const { data } = await userApi.shopping.lists.updateLabelSettings(shoppingList.value.id, localLabels.value);
     loadingCounter.value -= 1;
@@ -221,6 +234,14 @@ export function useShoppingListCrud(
       shoppingList.value.labelSettings = (data as ShoppingListOut).labelSettings;
       updateItemsByLabel();
     }
+    else {
+      // the save failed: roll the reorder dialog and the list back to the previous order
+      shoppingList.value.labelSettings = previousOrder;
+      localLabels.value = previousOrder;
+      alert.error(t("events.something-went-wrong"));
+    }
+
+    savingLabelOrder.value = false;
   }
 
   function toggleReorderLabelsDialog(reorderLabelsDialog: Ref<boolean>) {
