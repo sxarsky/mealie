@@ -2,7 +2,7 @@ import { useDark, useToggle } from "@vueuse/core";
 import type { FilterFunction } from "vuetify";
 
 export const useToggleDarkMode = () => {
-  const isDark = useDark();
+  const isDark = useDark({ attribute: "data-theme", valueDark: "dark", valueLight: "light" });
   const toggleDark = useToggle(isDark);
 
   return () => toggleDark();
