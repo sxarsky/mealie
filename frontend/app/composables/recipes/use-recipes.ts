@@ -52,15 +52,22 @@ export const useLazyRecipes = function (publicGroupSlug: string | null = null) {
     orderByNullPosition: OrderByNullPosition | null = null,
     query: RecipeSearchQuery | null = null,
     queryFilter: string | null = null,
+    signal?: AbortSignal,
   ) {
     const { data, error } = await api.recipes.getAll(
       page,
       perPage,
       getParams(orderBy, orderDirection, orderByNullPosition, query, queryFilter),
+      { signal },
     );
 
     if (error?.response?.status === 404) {
       router.push("/login");
+    }
+
+    // surface a non-404 transport/server failure so callers can render an error state
+    if (error && error.response?.status !== 404) {
+      throw error;
     }
 
     return data ? data.items : [];

@@ -105,7 +105,25 @@
         @toggle-dense-view="toggleMobileCards()"
       />
     </v-row>
-    <div v-if="recipes && ready">
+    <div
+      data-testid="explorer-results"
+      :data-state="resultState"
+    >
+      <div
+        v-if="error"
+        class="text-center pa-6"
+        data-testid="explorer-results-error"
+      >
+        {{ $t("general.confirmation-error") }}
+      </div>
+      <div
+        v-else-if="ready && recipes.length === 0 && !loading"
+        class="text-center pa-6"
+        data-testid="explorer-results-empty"
+      >
+        {{ $t("search.no-results") }}
+      </div>
+      <div v-if="recipes && ready">
       <div class="mt-2">
         <v-row v-if="!useMobileCards">
           <v-col
@@ -154,12 +172,13 @@
       </div>
       <v-card v-intersect="infiniteScroll" variant="flat" />
     </div>
-    <v-fade-transition>
-      <AppLoader
-        v-if="loading"
-        :loading="loading"
-      />
-    </v-fade-transition>
+      <v-fade-transition>
+        <AppLoader
+          v-if="loading"
+          :loading="loading"
+        />
+      </v-fade-transition>
+    </div>
     <AppScrollToTop />
   </div>
 </template>
@@ -235,6 +254,26 @@ const perPage = 32;
 const hasMore = ref(true);
 const ready = ref(false);
 const loading = ref(false);
+const error = ref(false);
+
+// Tracks the in-flight explorer fetch so a newer query can cancel an older one
+let activeController: AbortController | null = null;
+
+const resultState = computed(() => {
+  if (loading.value) {
+    return "loading";
+  }
+  if (error.value) {
+    return "error";
+  }
+  if (ready.value && props.recipes.length === 0) {
+    return "empty";
+  }
+  if (ready.value) {
+    return "results";
+  }
+  return "idle";
+});
 
 const { fetchMore, getRandom } = useLazyRecipes(isOwnGroup.value ? null : groupSlug.value);
 const { savePosition, getSavedPage, restorePosition } = useScrollPosition();
@@ -257,7 +296,7 @@ const queryFilter = computed(() => {
   // }
 });
 
-async function fetchRecipes(pageCount = 1) {
+async function fetchRecipes(pageCount = 1, signal?: AbortSignal) {
   const orderDir = props.query?.orderDirection || preferences.value.orderDirection;
   const orderByNullPosition = props.query?.orderByNullPosition || orderDir === "asc" ? "first" : "last";
   const orderBy = props.query?.orderBy || preferences.value.orderBy;
@@ -274,6 +313,7 @@ async function fetchRecipes(pageCount = 1) {
     localQuery,
     // we use a computed queryFilter to filter out recipes that have a null value for the property we're sorting by
     queryFilter.value,
+    signal,
   );
 }
 
@@ -324,17 +364,38 @@ async function initRecipes() {
   page.value = 1;
   hasMore.value = true;
 
-  // we double-up the first call to avoid a bug with large screens that render
-  // the entire first page without scrolling, preventing additional loading
-  const newRecipes = await fetchRecipes(page.value + 1);
-  if (newRecipes.length < perPage) {
-    hasMore.value = false;
+  // cancel any still-running explorer fetch so its (now stale) response is dropped
+  activeController?.abort();
+  const controller = new AbortController();
+  activeController = controller;
+  error.value = false;
+
+  try {
+    // we double-up the first call to avoid a bug with large screens that render
+    // the entire first page without scrolling, preventing additional loading
+    const newRecipes = await fetchRecipes(page.value + 1, controller.signal);
+
+    // a newer query superseded this one; discard the stale response
+    if (controller.signal.aborted || activeController !== controller) {
+      return;
+    }
+
+    if (newRecipes.length < perPage) {
+      hasMore.value = false;
+    }
+
+    // since we doubled the first call, we also need to advance the page
+    page.value = page.value + 1;
+
+    emit(REPLACE_RECIPES_EVENT, newRecipes);
   }
-
-  // since we doubled the first call, we also need to advance the page
-  page.value = page.value + 1;
-
-  emit(REPLACE_RECIPES_EVENT, newRecipes);
+  catch (err) {
+    // an aborted request is expected when a newer query supersedes it
+    if (controller.signal.aborted || (err as Error)?.name === "AbortError" || (err as Error)?.name === "CanceledError") {
+      return;
+    }
+    error.value = true;
+  }
 }
 
 const infiniteScroll = useThrottleFn(async () => {
