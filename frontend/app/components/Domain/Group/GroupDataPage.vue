@@ -7,9 +7,12 @@
     color="primary"
     max-width="600px"
     width="100%"
-    :submit-disabled="!createFormValid"
+    :submit-disabled="!createFormValid || createPending"
+    :keep-open="createPending"
     can-confirm
-    @confirm="emit('create-one', createForm.data)"
+    data-testid="group-data-dialog"
+    :data-state="createDialogState"
+    @confirm="submitCreate"
   >
     <div class="mx-2 mt-2">
       <slot name="create-dialog-top" />
@@ -17,8 +20,17 @@
         v-model="createForm.data"
         v-model:is-valid="createFormValid"
         :items="createForm.items"
+        :server-errors="createServerErrors"
+        field-testid-prefix="group-data-field"
         class="py-2"
       />
+      <p
+        v-if="createServerError"
+        class="text-error mt-2 mb-0"
+        data-testid="group-data-server-error"
+      >
+        {{ createServerError }}
+      </p>
     </div>
   </BaseDialog>
 
@@ -30,9 +42,12 @@
     color="primary"
     max-width="600px"
     width="100%"
-    :submit-disabled="!editFormValid"
+    :submit-disabled="!editFormValid || editPending"
+    :keep-open="editPending"
     can-confirm
-    @confirm="emit('edit-one', editForm.data)"
+    data-testid="group-data-dialog"
+    :data-state="editDialogState"
+    @confirm="submitEdit"
   >
     <div class="mx-2 mt-2">
       <slot name="edit-dialog-top" />
@@ -40,8 +55,17 @@
         v-model="editForm.data"
         v-model:is-valid="editFormValid"
         :items="editForm.items"
+        :server-errors="editServerErrors"
+        field-testid-prefix="group-data-field"
         class="py-2"
       />
+      <p
+        v-if="editServerError"
+        class="text-error mt-2 mb-0"
+        data-testid="group-data-server-error"
+      >
+        {{ editServerError }}
+      </p>
     </div>
     <template #custom-card-action>
       <slot name="edit-dialog-custom-action" />
@@ -139,10 +163,16 @@ import type { AutoFormItems } from "~/types/auto-forms";
 
 const slots = useSlots();
 
+export interface SaveOutcome {
+  ok: boolean;
+  fieldErrors?: Record<string, string>;
+  message?: string;
+}
+
 const emit = defineEmits<{
   (e: "deleteOne", id: string): void;
   (e: "deleteMany", ids: string[]): void;
-  (e: "create-one" | "edit-one", data: any): void;
+  (e: "create-one" | "edit-one", data: any, reconcile: (outcome: SaveOutcome) => void): void;
   (e: "bulk-action", event: string, items: any[]): void;
 }>();
 
@@ -210,8 +240,60 @@ const editFormValid = ref(false);
 const itemSlotNames = computed(() => Object.keys(slots).filter(slotName => slotName.startsWith("item.")));
 const editEventHandler = (item: any) => {
   editForm.value.data = { ...item };
+  editServerErrors.value = {};
+  editServerError.value = "";
+  editPending.value = false;
   editDialog.value = true;
 };
+
+// ------------------------------------------------------------
+// Submit reconcile: keep the dialog open while in flight and on
+// failure, and merge any server-side field errors back into the
+// form instead of silently dropping them.
+const createPending = ref(false);
+const createServerErrors = ref<Record<string, string>>({});
+const createServerError = ref("");
+
+const editPending = ref(false);
+const editServerErrors = ref<Record<string, string>>({});
+const editServerError = ref("");
+
+const createDialogState = computed(() =>
+  createPending.value ? "submitting" : (createServerError.value || Object.keys(createServerErrors.value).length ? "error" : "idle"),
+);
+const editDialogState = computed(() =>
+  editPending.value ? "submitting" : (editServerError.value || Object.keys(editServerErrors.value).length ? "error" : "idle"),
+);
+
+function submitCreate() {
+  createPending.value = true;
+  createServerErrors.value = {};
+  createServerError.value = "";
+  emit("create-one", createForm.value.data, (outcome: SaveOutcome) => {
+    createPending.value = false;
+    if (outcome.ok) {
+      createDialog.value = false;
+      return;
+    }
+    createServerErrors.value = outcome.fieldErrors || {};
+    createServerError.value = outcome.message || "";
+  });
+}
+
+function submitEdit() {
+  editPending.value = true;
+  editServerErrors.value = {};
+  editServerError.value = "";
+  emit("edit-one", editForm.value.data, (outcome: SaveOutcome) => {
+    editPending.value = false;
+    if (outcome.ok) {
+      editDialog.value = false;
+      return;
+    }
+    editServerErrors.value = outcome.fieldErrors || {};
+    editServerError.value = outcome.message || "";
+  });
+}
 
 // ============================================================
 // Delete Logic
