@@ -128,6 +128,7 @@
         group: 'recipe-instructions',
         ghostClass: 'ghost',
       }"
+      :data-dragging="drag"
       @start="drag = true"
       @end="onDragEnd"
     >
@@ -137,6 +138,7 @@
         <div
           v-for="(step, index) in instructionList"
           :key="step.id!"
+          :data-step-id="step.id"
           class="list-group-item"
         >
           <v-sheet
