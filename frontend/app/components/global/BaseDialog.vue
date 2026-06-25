@@ -1,9 +1,6 @@
 <template>
   <div>
-    <slot
-      name="activator"
-      v-bind="{ open }"
-    />
+    <slot name="activator" />
     <v-dialog
       v-model="dialog"
       :width="width"
@@ -208,21 +205,6 @@ function deleteEvent() {
   submitted.value = true;
 }
 
-function open() {
-  dialog.value = true;
-  logDeprecatedProp("open");
-}
-
-/* function close() {
-  dialog.value = false;
-  logDeprecatedProp("close");
-} */
-
-function logDeprecatedProp(val: string) {
-  console.warn(
-    `[BaseDialog] The method '${val}' is deprecated. Please use v-model="value" to manage state instead.`,
-  );
-}
 </script>
 
 <style>
