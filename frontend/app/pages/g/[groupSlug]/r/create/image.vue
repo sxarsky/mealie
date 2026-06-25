@@ -93,6 +93,37 @@
         </v-card-actions>
       </div>
     </v-form>
+    <v-expand-transition>
+      <v-alert
+        v-if="state.error"
+        color="error"
+        class="mt-6 white--text"
+      >
+        <v-card-title class="ma-0 pa-0">
+          <v-icon
+            start
+            color="white"
+            size="x-large"
+          >
+            {{ $globals.icons.robot }}
+          </v-icon>
+          {{ $t("new-recipe.error-title") }}
+        </v-card-title>
+        <v-divider class="my-3 mx-2" />
+        <p>{{ $t("events.something-went-wrong") }}</p>
+        <div class="d-flex justify-end my-3">
+          <v-btn
+            color="white"
+            variant="outlined"
+            data-testid="image-import-retry"
+            :loading="state.loading"
+            @click="createRecipe"
+          >
+            {{ $t("general.retry") }}
+          </v-btn>
+        </div>
+      </v-alert>
+    </v-expand-transition>
   </div>
 </template>
 
@@ -104,6 +135,7 @@ import type { VForm } from "~/types/auto-forms";
 
 const state = reactive({
   loading: false,
+  error: false,
 });
 
 const i18n = useI18n();
@@ -143,14 +175,17 @@ async function createRecipe() {
   }
 
   state.loading = true;
+  state.error = false;
 
   const translateLanguage = shouldTranslate.value ? i18n.locale : undefined;
   const { data, error } = await api.recipes.createOneFromImages(uploadedImages.value, translateLanguage?.value);
   if (error || !data) {
     alert.error(i18n.t("events.something-went-wrong"));
+    state.error = true;
     state.loading = false;
   }
   else {
+    state.error = false;
     navigateToRecipe(data, groupSlug.value, `/g/${groupSlug.value}/r/create/image`);
   }
 }
