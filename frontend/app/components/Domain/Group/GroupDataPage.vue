@@ -81,7 +81,12 @@
         {{ $t('general.confirm-delete-generic-items') }}
       </p>
       <v-card variant="outlined">
-        <v-virtual-scroll height="400" item-height="25" :items="bulkDeleteTarget">
+        <v-virtual-scroll
+          height="400"
+          item-height="25"
+          :items="bulkDeleteTarget"
+          :data-total-count="bulkDeleteTarget.length"
+        >
           <template #default="{ item }">
             <v-list-item class="pb-2">
               <v-list-item-title>{{ item.name || item.title || item.id }}</v-list-item-title>
