@@ -7,7 +7,7 @@
       <div class="d-flex justify-center mb-2">
         <v-text-field
           ref="input"
-          data-testid="explorer-search-input"
+          data-testid="recipe-search-field"
           v-model="state.search"
           variant="outlined"
           hide-details
