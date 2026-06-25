@@ -50,7 +50,12 @@
       @submit="saveLabelOrder"
       @close="cancelLabelOrder"
     >
-      <v-card height="fit-content" max-height="70vh" style="overflow-y: auto;">
+      <v-card
+        height="fit-content"
+        max-height="70vh"
+        style="overflow-y: auto;"
+        :data-saving="loadingCounter > 0 ? 'true' : undefined"
+      >
         <VueDraggable
           v-if="localLabels"
           v-model="localLabels"
@@ -58,9 +63,16 @@
           :delay="250"
           :delay-on-touch-only="true"
           class="my-2"
+          @start="labelDragActive = true"
+          @end="labelDragActive = false"
           @update:model-value="updateLabelOrder"
         >
-          <div v-for="(labelSetting, index) in localLabels" :key="labelSetting.id">
+          <div
+            v-for="(labelSetting, index) in localLabels"
+            :key="labelSetting.id"
+            :data-testid="`reorder-label-row-${labelSetting.id}`"
+            :data-dragging="labelDragActive ? 'true' : undefined"
+          >
             <MultiPurposeLabelSection v-model="localLabels[index]" use-color />
           </div>
         </VueDraggable>
@@ -370,6 +382,9 @@ useSeoMeta({
 
 const route = useRoute();
 const id = route.params.id as string;
+
+// true while a label row is being dragged in the reorder dialog
+const labelDragActive = ref(false);
 
 const shoppingListPage = useShoppingListPage(id);
 const { store: allLabels } = useLabelStore();
