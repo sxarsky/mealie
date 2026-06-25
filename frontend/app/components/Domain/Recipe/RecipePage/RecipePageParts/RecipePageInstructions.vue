@@ -296,7 +296,7 @@
               />
 
               <!-- Content -->
-              <DropZone @drop="(f) => handleImageDrop(index, f)">
+              <DropZone :state="uploadStates[index] || 'idle'" @drop="(f) => handleImageDrop(index, f)">
                 <v-card-text
                   v-if="isEditForm"
                   @click="$emit('click-instruction-field', `${index}.text`)"
@@ -731,6 +731,7 @@ const api = useUserApi();
 const { recipeAssetPath } = useStaticRoutes();
 
 const loadingStates = ref<{ [key: number]: boolean }>({});
+const uploadStates = ref<{ [key: number]: "idle" | "uploading" | "done" | "error" }>({});
 
 async function handleImageDrop(index: number, files: File[]) {
   if (!files) {
@@ -740,10 +741,12 @@ async function handleImageDrop(index: number, files: File[]) {
   // Check if the file is an image
   const file = files[0];
   if (!file || !file.type.startsWith("image/")) {
+    uploadStates.value[index] = "error";
     return;
   }
 
   loadingStates.value[index] = true;
+  uploadStates.value[index] = "uploading";
 
   const { data } = await api.recipes.createAsset(props.recipe.slug, {
     name: file.name,
@@ -755,6 +758,7 @@ async function handleImageDrop(index: number, files: File[]) {
   loadingStates.value[index] = false;
 
   if (!data) {
+    uploadStates.value[index] = "error";
     return; // TODO: Handle error
   }
 
@@ -762,6 +766,7 @@ async function handleImageDrop(index: number, files: File[]) {
   const assetUrl = recipeAssetPath(props.recipe.id, data.fileName as string);
   const text = `<img src="${assetUrl}" height="100%" width="100%"/>`;
   instructionList.value[index].text += text;
+  uploadStates.value[index] = "done";
 }
 
 function openImageUpload(index: number) {
