@@ -37,11 +37,13 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.skyramp-testbot-app-token.outputs.token }}
 
-      - uses: skyramp/testbot@50d7a01e58cf47d12439a2845a5555709bccd3a0 # v0.10.5
+      - uses: skyramp/testbot@d73b19920cf3d8df3b3287c8bd95d09fd997a3d1 # v0.10.6
         with:
           skyrampLicenseFile: ${{ secrets.SKYRAMP_LICENSE_FILE }}
           anthropicApiKey: ${{ secrets.SKYRAMP_TESTBOT_API_KEY }}
           githubToken: ${{ steps.skyramp-testbot-app-token.outputs.token }}
+          skyrampMcpVersion: '0.2.8'
+          skyrampExecutorVersion: 'v1.3.28'
           targetSetupCommand: './deployment-testbot/setup.sh'
           targetReadyCheckCommand: 'curl -f http://localhost:9000/api/app/about'
           targetReadyCheckTimeout: 180
