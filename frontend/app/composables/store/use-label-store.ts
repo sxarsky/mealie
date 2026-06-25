@@ -3,14 +3,14 @@ import { useData, useStore } from "../partials/use-store-factory";
 import type { MultiPurposeLabelOut } from "~/lib/api/types/labels";
 import { useUserApi } from "~/composables/api";
 
-const store: Ref<MultiPurposeLabelOut[]> = ref([]);
-const loading = ref(false);
-const initialized = ref(false);
+const labelItems: Ref<MultiPurposeLabelOut[]> = ref([]);
+const isFetching = ref(false);
+const isHydrated = ref(false);
 
 export function resetLabelStore() {
-  store.value = [];
-  loading.value = false;
-  initialized.value = false;
+  labelItems.value = [];
+  isFetching.value = false;
+  isHydrated.value = false;
 }
 
 export const useLabelData = function () {
@@ -24,5 +24,5 @@ export const useLabelData = function () {
 
 export const useLabelStore = function (i18n?: Composer) {
   const api = useUserApi(i18n);
-  return useStore<MultiPurposeLabelOut>("label", store, loading, initialized, api.multiPurposeLabels);
+  return useStore<MultiPurposeLabelOut>("label", labelItems, isFetching, isHydrated, api.multiPurposeLabels);
 };
