@@ -3,6 +3,8 @@
     <v-container
       v-if="!edit"
       class="pa-0"
+      :data-item-id="listItem.id"
+      :data-checked="listItem.checked"
       :style="{
         transform: `translateX(${isRtl ? -swiping : swiping}px)`,
         transition: swiping === 0 ? 'transform 0.2s ease' : 'none',
