@@ -8,11 +8,20 @@ interface ReadOnlyStoreActions<T extends BoundT> {
   refresh(page?: number, perPage?: number, params?: any): Promise<void>;
 }
 
+export interface BulkDeleteTally {
+  succeeded: (string | number)[];
+  failed: (string | number)[];
+  total: number;
+}
+
 interface StoreActions<T extends BoundT> extends ReadOnlyStoreActions<T> {
   createOne(createData: T): Promise<T | null>;
   updateOne(updateData: T): Promise<T | null>;
   deleteOne(id: string | number): Promise<T | null>;
-  deleteMany(ids: (string | number)[]): Promise<void>;
+  deleteMany(
+    ids: (string | number)[],
+    onItemSettled?: (id: string | number, ok: boolean) => void,
+  ): Promise<BulkDeleteTally>;
 }
 
 /**
@@ -176,15 +185,49 @@ export function useStoreActions<T extends BoundT>(
     return response?.data || null;
   }
 
-  async function deleteMany(ids: (string | number)[]) {
+  async function deleteMany(
+    ids: (string | number)[],
+    onItemSettled?: (id: string | number, ok: boolean) => void,
+  ): Promise<BulkDeleteTally> {
     loading.value = true;
-    for (const id of ids) {
-      await api.deleteOne(id);
+
+    const succeeded: (string | number)[] = [];
+    const failed: (string | number)[] = [];
+
+    // Dispatch the per-item deletes resiliently (concurrency-capped) so a
+    // single failure no longer aborts the rest of the batch.
+    const concurrency = 4;
+    const queue = [...ids];
+
+    async function worker() {
+      while (queue.length) {
+        const id = queue.shift()!;
+        try {
+          const { response } = await api.deleteOne(id);
+          const ok = !!response && response.status >= 200 && response.status < 300;
+          if (ok) {
+            succeeded.push(id);
+          }
+          else {
+            failed.push(id);
+          }
+          onItemSettled?.(id, ok);
+        }
+        catch {
+          failed.push(id);
+          onItemSettled?.(id, false);
+        }
+      }
     }
+
+    await Promise.all(Array.from({ length: Math.min(concurrency, ids.length) }, worker));
+
     if (allRef?.value) {
       await refresh();
     }
     loading.value = false;
+
+    return { succeeded, failed, total: ids.length };
   }
 
   return {
