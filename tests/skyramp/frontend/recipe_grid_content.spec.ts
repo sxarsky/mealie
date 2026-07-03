@@ -19,7 +19,7 @@ test('testUi', async ({ page }) => {
     await page.getByRole("button", { name: "Login" }).click();
     await page.waitForTimeout(3000);
 
-    await expect(page.getByTestId("explorer-search-input")).toBeVisible();
+    await expect(page.getByTestId("recipe-search-field")).toBeVisible();
     // Recipe grid content rendered (assumes synchronous render after ready)
     await expect(page.getByRole("link").first()).toBeVisible();
     expect(errors).toHaveLength(0);

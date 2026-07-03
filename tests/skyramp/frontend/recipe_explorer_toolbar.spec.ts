@@ -20,6 +20,6 @@ test('testUi', async ({ page }) => {
     await page.waitForTimeout(3000);
 
     // Existing explorer toolbar affordances
-    await expect(page.getByTestId("explorer-search-input")).toBeVisible();
+    await expect(page.getByTestId("recipe-search-field")).toBeVisible();
     expect(errors).toHaveLength(0);
 });

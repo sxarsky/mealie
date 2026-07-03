@@ -43,7 +43,7 @@ test('testUi', async ({ page }) => {
     await expect(form).toBeVisible();
 
     // anchor 2: the search text field, addressed by its data-testid
-    const searchField = page.locator('[data-testid="explorer-search-input"]');
+    const searchField = page.locator('[data-testid="recipe-search-field"]');
     await expect(searchField).toBeVisible();
     await searchField.locator("input").fill("soup");
 
