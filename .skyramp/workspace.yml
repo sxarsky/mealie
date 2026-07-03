@@ -4,8 +4,8 @@ workspace:
   repoUrl: https://github.com/sxarsky/mealie
 metadata:
   schemaVersion: v1
-  mcpVersion: v0.2.150-rc.ui.mntnc
-  executorVersion: v1.3.28
+  mcpVersion: v0.2.10-rc.1
+  executorVersion: v1.3.32
 services:
   - serviceName: mealie-backend
     language: python
