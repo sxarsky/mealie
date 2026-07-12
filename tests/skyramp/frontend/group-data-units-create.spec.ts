@@ -19,10 +19,19 @@ test('testUi', async () => {
   await page.getByRole('button', { name: 'Create' }).click();
   const dialog = page.getByRole('dialog');
 
-  // a 1-char name is valid on base (only `required`) → submit stays enabled
-  await dialog.getByLabel('Name').fill('x');
+  // a 1-char name is now rejected by `validators.minLength(2)` → submit stays disabled
+  const nameInput = dialog.getByLabel('Name');
   const confirm = dialog.getByRole('button', { name: 'Confirm' });
+  await nameInput.fill('x');
+  await expect(confirm).toBeDisabled();
+
+  // a 2-char name satisfies minLength(2) → submit becomes enabled
+  await nameInput.fill('xx');
   await expect(confirm).toBeEnabled();
   await confirm.click();
   await page.waitForTimeout(2000);
+
+  // creation succeeds: dialog closes and the new unit appears in the table
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  await expect(page.getByRole('cell', { name: 'xx', exact: true })).toBeVisible();
 });
