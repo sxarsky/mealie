@@ -253,7 +253,7 @@ const formItems = computed<AutoFormItems>(() => [
     label: i18n.t("general.name"),
     varName: "name",
     type: fieldTypes.TEXT,
-    rules: [validators.required],
+    rules: [validators.required, validators.minLength(2)],
   },
   {
     cols: 4,

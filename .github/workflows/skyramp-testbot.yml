@@ -37,13 +37,13 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.skyramp-testbot-app-token.outputs.token }}
 
-      - uses: skyramp/testbot@89f8cd799fdbf8ff762568873f52dacab5d3e23f # v0.10.7
+      - uses: skyramp/testbot@70034f7ff936e4e516064307679160cdc8da60eb # v0.11.0
         with:
           skyrampLicenseFile: ${{ secrets.SKYRAMP_LICENSE_FILE }}
           anthropicApiKey: ${{ secrets.SKYRAMP_TESTBOT_API_KEY }}
           githubToken: ${{ steps.skyramp-testbot-app-token.outputs.token }}
-          skyrampMcpVersion: 'v0.2.10-rc.1'
-          skyrampExecutorVersion: 'v1.3.32'
+          skyrampMcpVersion: '0.3.0'
+          skyrampExecutorVersion: 'v1.3.34'
           targetSetupCommand: './deployment-testbot/setup.sh'
           targetReadyCheckCommand: 'curl -f http://localhost:9000/api/app/about'
           # v0.10.6 runs the ready-check concurrently with setup (unlike v0.10.4 which
