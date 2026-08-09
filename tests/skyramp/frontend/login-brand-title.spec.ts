@@ -4,7 +4,9 @@ import { test, expect } from "@skyramp/skyramp";
 test("testUi", async ({ page }) => {
   await page.goto("/login");
   await page.waitForTimeout(3000);
-  // The brand title is a hardcoded literal in login.vue
-  // (<v-toolbar-title class="text-h4 text-center">Mealie</v-toolbar-title>).
-  await expect(page.getByText("Mealie", { exact: true })).toBeVisible();
+  // The brand title is now sourced from the `user.brand-name` i18n key
+  // (<v-toolbar-title class="text-h4 text-center">{{ $t("user.brand-name") }}</v-toolbar-title>).
+  // The en-US default-locale value for `user.brand-name` is "Mealie", so this
+  // assertion tracks the translated value rather than a hardcoded literal.
+  await expect(page.getByText("Mealie", { exact: true })).toHaveText("Mealie");
 });
