@@ -39,15 +39,17 @@ test('testUi', async ({ page }) => {
     await page.waitForTimeout(3000);
 
     // open the create dialog (BaseButton create -> createDialog = true)
-    await page.getByRole("button", { name: "Create" }).first().click();
+    // scoped to main content so it targets the Food Data toolbar's Create button,
+    // not the sidebar navigation's "Create" (recipe) button
+    await page.locator("main").getByRole("button", { name: "Create" }).click();
     await page.waitForTimeout(3000);
 
     // the shared shell renders a Vuetify v-dialog with role="dialog"
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
 
-    // shared shell renders the dialog title inside a toolbar title element
-    await expect(dialog.locator(".v-toolbar-title")).toBeVisible();
+    // shared shell renders the dialog title inside a card title element
+    await expect(dialog.locator(".v-card-title.dialog-header-title")).toHaveText("Create Food");
 
     // shared shell confirm action (canConfirm) keyed by accessible role + label
     await expect(dialog.getByRole("button", { name: "Confirm" })).toBeVisible();
