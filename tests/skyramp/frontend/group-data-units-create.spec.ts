@@ -3,6 +3,8 @@ import { test, expect, newSkyrampPlaywrightPage } from '@skyramp/skyramp';
 
 test('testUi', async () => {
   const page = await newSkyrampPlaywrightPage();
+  const errors: Error[] = [];
+  page.on('pageerror', (err) => errors.push(err));
 
   // --- login ---
   await page.goto('/login');
@@ -18,6 +20,7 @@ test('testUi', async () => {
   // open the create dialog
   await page.getByRole('button', { name: 'Create' }).click();
   const dialog = page.getByRole('dialog');
+  await expect(dialog.locator('[data-testid="base-dialog"]')).toBeVisible();
 
   // a 1-char name is valid on base (only `required`) → submit stays enabled
   await dialog.getByLabel('Name').fill('x');
@@ -25,4 +28,6 @@ test('testUi', async () => {
   await expect(confirm).toBeEnabled();
   await confirm.click();
   await page.waitForTimeout(2000);
+  await expect(page.getByRole('button', { name: 'Create' })).toBeFocused();
+  expect(errors).toHaveLength(0);
 });
