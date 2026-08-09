@@ -47,9 +47,10 @@ test('testUi', async ({ page }) => {
     await expect(searchField).toBeVisible();
     await searchField.locator("input").fill("soup");
 
-    // anchor 3: the sort menu trigger lives inside the .search-row flex row
-    const sortBtn = page.locator(".search-row button.ml-auto");
-    await expect(sortBtn.first()).toBeVisible();
+    // anchor 3: the sort menu trigger, identified by its data-testid
+    const sortBtn = page.getByTestId("explorer-sort-menu");
+    await expect(sortBtn).toBeVisible();
+    await expect(sortBtn).toContainText("Created");
 
     // anchor 4: explicit submit button when auto-search is off (the big search button)
     const submitBtn = page.locator(".search-button-container button[type='submit']");
