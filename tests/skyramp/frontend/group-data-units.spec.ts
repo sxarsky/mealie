@@ -16,8 +16,8 @@ test('testUi', async () => {
   await page.waitForTimeout(3000);
 
   // column header rendered from data-pages.units.abbreviation
-  await expect(page.getByRole('columnheader', { name: 'Abbreviation' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Abbrev.' })).toBeVisible();
 
   // create affordance (general.create)
-  await expect(page.getByRole('button', { name: 'Create' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'New' })).toBeVisible();
 });

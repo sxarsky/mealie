@@ -16,7 +16,7 @@ test('testUi', async () => {
   await page.waitForTimeout(3000);
 
   // toolbar exposes both the Create and the Combine affordances
-  await expect(page.getByRole('button', { name: 'Create' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'New' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Combine' })).toBeVisible();
 
   // the Combine affordance opens the merge dialog

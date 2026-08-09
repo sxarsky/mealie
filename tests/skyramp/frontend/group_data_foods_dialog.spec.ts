@@ -39,7 +39,8 @@ test('testUi', async ({ page }) => {
     await page.waitForTimeout(3000);
 
     // open the create dialog (BaseButton create -> createDialog = true)
-    await page.getByRole("button", { name: "Create" }).first().click();
+    // scoped to main: the sidebar nav also has a "New" menu-trigger button sharing this label
+    await page.getByRole("main").getByRole("button", { name: "New" }).first().click();
     await page.waitForTimeout(3000);
 
     // the shared shell renders a Vuetify v-dialog with role="dialog"
