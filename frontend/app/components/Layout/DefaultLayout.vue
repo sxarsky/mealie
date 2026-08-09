@@ -1,5 +1,8 @@
 <template>
-  <v-app dark>
+  <v-app
+    dark
+    :data-breakpoint="display.lgAndUp.value ? 'desktop' : 'mobile'"
+  >
     <TheSnackbar />
 
     <AppHeader>
