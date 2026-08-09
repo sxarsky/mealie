@@ -51,11 +51,13 @@
   <!-- Delete Dialog -->
   <BaseDialog
     v-model="deleteDialog"
+    data-testid="confirm-delete-dialog"
     :title="$t('general.confirm')"
     :icon="$globals.icons.alertCircle"
     color="error"
     can-confirm
     @confirm="$emit('deleteOne', deleteTarget.id)"
+    @close="restoreDeleteTriggerFocus"
   >
     <v-card-text>
       {{ $t("general.confirm-delete-generic") }}
@@ -217,13 +219,23 @@ const editEventHandler = (item: any) => {
 // Delete Logic
 const deleteTarget = ref<any>(null);
 const deleteDialog = ref(false);
+const deleteTrigger = ref<HTMLElement | null>(null);
 
 async function deleteEventHandler(item: any) {
   deleteTarget.value = item;
+  deleteTrigger.value = document.activeElement as HTMLElement | null;
   if (props.onDeleteDialogOpen) {
     await props.onDeleteDialogOpen([item]);
   }
   deleteDialog.value = true;
+}
+
+function restoreDeleteTriggerFocus() {
+  const trigger = deleteTrigger.value;
+  deleteTrigger.value = null;
+  if (trigger && typeof trigger.focus === "function") {
+    nextTick(() => trigger.focus());
+  }
 }
 
 // ============================================================
