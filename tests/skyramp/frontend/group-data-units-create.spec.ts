@@ -16,7 +16,7 @@ test('testUi', async () => {
   await page.waitForTimeout(3000);
 
   // open the create dialog
-  await page.getByRole('button', { name: 'Create' }).click();
+  await page.getByRole('button', { name: 'New' }).click();
   const dialog = page.getByRole('dialog');
 
   // a 1-char name is valid on base (only `required`) → submit stays enabled
