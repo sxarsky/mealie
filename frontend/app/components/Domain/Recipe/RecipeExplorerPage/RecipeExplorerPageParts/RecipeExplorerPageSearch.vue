@@ -75,6 +75,19 @@
           </v-card>
         </v-menu>
 
+        <!-- Clear all filters -->
+        <v-btn
+          data-testid="explorer-clear-filters"
+          size="small"
+          color="accent"
+          @click="reset"
+        >
+          <v-icon size="small" start>
+            {{ $globals.icons.broom }}
+          </v-icon>
+          {{ $t("general.clear") }}
+        </v-btn>
+
         <!-- Settings -->
         <v-menu
           offset-y
