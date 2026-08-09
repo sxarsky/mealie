@@ -42,8 +42,8 @@ jobs:
           skyrampLicenseFile: ${{ secrets.SKYRAMP_LICENSE_FILE }}
           anthropicApiKey: ${{ secrets.SKYRAMP_TESTBOT_API_KEY }}
           githubToken: ${{ steps.skyramp-testbot-app-token.outputs.token }}
-          skyrampMcpVersion: 'v0.2.10-rc.1'
-          skyrampExecutorVersion: 'v1.3.32'
+          skyrampMcpVersion: '0.3.2'
+          skyrampExecutorVersion: 'v1.3.37'
           targetSetupCommand: './deployment-testbot/setup.sh'
           targetReadyCheckCommand: 'curl -f http://localhost:9000/api/app/about'
           # v0.10.6 runs the ready-check concurrently with setup (unlike v0.10.4 which

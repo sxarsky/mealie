@@ -15,9 +15,8 @@ services:
       schemaPath: http://localhost:9000/openapi.json
       authType: bearer
       authHeader: Authorization
-      baseUrl: http://localhost:9000
+      baseUrl: http://mealie-testb:9000
     runtimeDetails:
-      serverStartCommand: docker compose -f deployment-testbot/docker-compose.yml up -d mealie
       runtime: docker
       dockerNetwork: deployment-testbot_default
   - serviceName: mealie-frontend
@@ -27,8 +26,7 @@ services:
     api:
       authType: bearer
       authHeader: Authorization
-      baseUrl: http://localhost:9000
+      baseUrl: http://mealie-testb:9000
     runtimeDetails:
-      serverStartCommand: docker compose -f deployment-testbot/docker-compose.yml up -d mealie
       runtime: docker
       dockerNetwork: deployment-testbot_default
