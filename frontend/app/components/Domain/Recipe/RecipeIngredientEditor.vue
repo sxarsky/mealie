@@ -199,6 +199,8 @@
             variant="solo"
             :placeholder="$t('recipe.notes')"
             class="mb-auto"
+            :data-testid="`ingredient-edit-${model.referenceId}`"
+            :data-ingredient-id="model.referenceId"
             @click="$emit('clickIngredientField', 'note')"
           />
           <BaseButtonGroup

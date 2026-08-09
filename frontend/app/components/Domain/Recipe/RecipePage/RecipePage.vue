@@ -37,7 +37,11 @@
           mode="text"
           :main-menu-bar="false"
         />
-        <v-card-text v-else>
+        <v-card-text
+          v-else
+          :data-editmode="isEditForm ? 'edit' : 'view'"
+          :data-dirty="hasUnsavedChanges() ? 'true' : 'false'"
+        >
           <!--
             This is where most of the main content is rendered. Some components include state for both Edit and View modes
             which is why some have explicit v-if statements and others use the composition API to determine and manage
