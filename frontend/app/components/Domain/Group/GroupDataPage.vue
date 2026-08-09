@@ -8,6 +8,7 @@
     max-width="600px"
     width="100%"
     :submit-disabled="!createFormValid"
+    confirm-testid="create-submit"
     can-confirm
     @confirm="emit('create-one', createForm.data)"
   >
