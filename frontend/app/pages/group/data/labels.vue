@@ -148,9 +148,44 @@ const createForm = reactive({
   } as MultiPurposeLabelSummary,
 });
 
-async function handleCreate(createFormData: MultiPurposeLabelSummary) {
-  await labelStore.actions.createOne(createFormData);
-  createForm.data = { name: "", color: "#7417BE" } as MultiPurposeLabelSummary;
+interface SaveOutcome {
+  ok: boolean;
+  fieldErrors?: Record<string, string>;
+  message?: string;
+}
+
+// Translate a failed request into per-field messages where the server
+// pinpointed a field, falling back to a single dialog-level message.
+function toSaveOutcome(error: any): SaveOutcome {
+  const detail = error?.response?._data?.detail ?? error?.data?.detail;
+  if (Array.isArray(detail)) {
+    const fieldErrors: Record<string, string> = {};
+    for (const entry of detail) {
+      const field = entry?.loc?.[entry.loc.length - 1];
+      if (field) {
+        fieldErrors[String(field)] = entry.msg || i18n.t("events.something-went-wrong");
+      }
+    }
+    if (Object.keys(fieldErrors).length) {
+      return { ok: false, fieldErrors };
+    }
+  }
+  return { ok: false, message: (typeof detail === "string" && detail) || i18n.t("events.something-went-wrong") };
+}
+
+async function handleCreate(createFormData: MultiPurposeLabelSummary, reconcile: (outcome: SaveOutcome) => void) {
+  try {
+    const created = await labelStore.actions.createOne(createFormData);
+    if (!created) {
+      reconcile({ ok: false, message: i18n.t("events.something-went-wrong") });
+      return;
+    }
+    reconcile({ ok: true });
+    createForm.data = { name: "", color: "#7417BE" } as MultiPurposeLabelSummary;
+  }
+  catch (error) {
+    reconcile(toSaveOutcome(error));
+  }
 }
 
 // ============================================================
@@ -160,9 +195,19 @@ const editForm = reactive({
   data: {} as MultiPurposeLabelSummary,
 });
 
-async function handleEdit(editFormData: MultiPurposeLabelSummary) {
-  await labelStore.actions.updateOne(editFormData);
-  editForm.data = {} as MultiPurposeLabelSummary;
+async function handleEdit(editFormData: MultiPurposeLabelSummary, reconcile: (outcome: SaveOutcome) => void) {
+  try {
+    const updated = await labelStore.actions.updateOne(editFormData);
+    if (!updated) {
+      reconcile({ ok: false, message: i18n.t("events.something-went-wrong") });
+      return;
+    }
+    reconcile({ ok: true });
+    editForm.data = {} as MultiPurposeLabelSummary;
+  }
+  catch (error) {
+    reconcile(toSaveOutcome(error));
+  }
 }
 
 // ============================================================
