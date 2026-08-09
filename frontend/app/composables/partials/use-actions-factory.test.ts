@@ -18,11 +18,11 @@ describe("useStoreActions", () => {
   test("deleteMany calls deleteOne for each ID and refreshes once", async () => {
     const actions = useStoreActions("test-store", mockApi, mockStore, mockLoading, mockInitialized);
 
-    mockApi.deleteOne = vi.fn().mockResolvedValue({ response: { data: {} } });
+    mockApi.deleteOne = vi.fn().mockResolvedValue({ response: { status: 200 } });
     mockApi.getAll = vi.fn().mockResolvedValue({ data: { items: [] } });
 
     const ids = ["1", "2", "3"];
-    await actions.deleteMany(ids);
+    const tally = await actions.deleteMany(ids);
 
     expect(mockApi.deleteOne).toHaveBeenCalledTimes(3);
     expect(mockApi.deleteOne).toHaveBeenCalledWith("1");
@@ -30,24 +30,31 @@ describe("useStoreActions", () => {
     expect(mockApi.deleteOne).toHaveBeenCalledWith("3");
 
     expect(mockApi.getAll).toHaveBeenCalledTimes(1);
+
+    expect(tally.total).toBe(3);
+    expect(tally.succeeded).toHaveLength(3);
+    expect(tally.failed).toHaveLength(0);
+    expect(tally.succeeded).toEqual(expect.arrayContaining(["1", "2", "3"]));
   });
 
   test("deleteMany handles empty array", async () => {
     const actions = useStoreActions("test-store", mockApi, mockStore, mockLoading, mockInitialized);
 
-    mockApi.deleteOne = vi.fn();
+    mockApi.deleteOne = vi.fn().mockResolvedValue({ response: { status: 200 } });
     mockApi.getAll = vi.fn().mockResolvedValue({ data: { items: [] } });
 
-    await actions.deleteMany([]);
+    const tally = await actions.deleteMany([]);
 
     expect(mockApi.deleteOne).not.toHaveBeenCalled();
     expect(mockApi.getAll).toHaveBeenCalledTimes(1);
+
+    expect(tally).toEqual({ succeeded: [], failed: [], total: 0 });
   });
 
   test("deleteMany sets loading state", async () => {
     const actions = useStoreActions("test-store", mockApi, mockStore, mockLoading, mockInitialized);
 
-    mockApi.deleteOne = vi.fn().mockResolvedValue({});
+    mockApi.deleteOne = vi.fn().mockResolvedValue({ response: { status: 200 } });
     mockApi.getAll = vi.fn().mockResolvedValue({ data: { items: [] } });
 
     const promise = actions.deleteMany(["1"]);
@@ -55,6 +62,41 @@ describe("useStoreActions", () => {
 
     await promise;
     expect(mockLoading.value).toBe(false);
+  });
+
+  test("deleteMany calls onItemSettled for each item with success flag", async () => {
+    const actions = useStoreActions("test-store", mockApi, mockStore, mockLoading, mockInitialized);
+
+    mockApi.deleteOne = vi.fn().mockResolvedValue({ response: { status: 200 } });
+    mockApi.getAll = vi.fn().mockResolvedValue({ data: { items: [] } });
+
+    const onItemSettled = vi.fn();
+    const tally = await actions.deleteMany(["1", "2"], onItemSettled);
+
+    expect(onItemSettled).toHaveBeenCalledTimes(2);
+    expect(onItemSettled).toHaveBeenCalledWith("1", true);
+    expect(onItemSettled).toHaveBeenCalledWith("2", true);
+    expect(tally.succeeded).toEqual(expect.arrayContaining(["1", "2"]));
+    expect(tally.failed).toHaveLength(0);
+  });
+
+  test("deleteMany reports failed items when deleteOne rejects", async () => {
+    const actions = useStoreActions("test-store", mockApi, mockStore, mockLoading, mockInitialized);
+
+    mockApi.deleteOne = vi.fn()
+      .mockResolvedValueOnce({ response: { status: 200 } })
+      .mockRejectedValueOnce(new Error("server error"))
+      .mockResolvedValueOnce({ response: { status: 200 } });
+    mockApi.getAll = vi.fn().mockResolvedValue({ data: { items: [] } });
+
+    const onItemSettled = vi.fn();
+    const tally = await actions.deleteMany(["1", "2", "3"], onItemSettled);
+
+    expect(tally.total).toBe(3);
+    expect(tally.succeeded).toHaveLength(2);
+    expect(tally.failed).toHaveLength(1);
+    expect(tally.failed).toContain("2");
+    expect(onItemSettled).toHaveBeenCalledWith("2", false);
   });
 
   test("refresh sets initialized to true even when store returns empty results", async () => {
