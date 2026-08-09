@@ -45,6 +45,7 @@ test('testUi', async ({ page }) => {
     // the shared shell renders a Vuetify v-dialog with role="dialog"
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
+    await expect(dialog.locator('[data-testid="base-dialog"]')).toBeVisible();
 
     // shared shell renders the dialog title inside a toolbar title element
     await expect(dialog.locator(".v-toolbar-title")).toBeVisible();
@@ -59,6 +60,7 @@ test('testUi', async ({ page }) => {
     await page.keyboard.press("Escape");
     await page.waitForTimeout(3000);
     await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Create" }).first()).toBeFocused();
 
     expect(errors).toHaveLength(0);
 });

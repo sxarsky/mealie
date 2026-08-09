@@ -3,6 +3,8 @@ import { test, expect, newSkyrampPlaywrightPage } from '@skyramp/skyramp';
 
 test('testUi', async () => {
   const page = await newSkyrampPlaywrightPage();
+  const errors: Error[] = [];
+  page.on('pageerror', (err) => errors.push(err));
 
   // --- login ---
   await page.goto('/login');
@@ -22,5 +24,10 @@ test('testUi', async () => {
   // the Combine affordance opens the merge dialog
   await page.getByRole('button', { name: 'Combine' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('dialog').locator('[data-testid="base-dialog"]')).toBeVisible();
   await expect(page.getByText('Combine Unit')).toBeVisible(); // data-pages.units.combine-unit
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Combine' })).toBeFocused();
+  expect(errors).toHaveLength(0);
 });
