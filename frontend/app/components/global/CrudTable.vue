@@ -41,6 +41,8 @@
         color="info"
         variant="elevated"
         :items="bulkActions"
+        data-testid="bulk-action-toolbar"
+        :data-selected-count="selected.length"
         v-on="bulkActionListener"
       />
       <slot name="button-row" />
