@@ -3,6 +3,8 @@ import { test, expect, newSkyrampPlaywrightPage } from '@skyramp/skyramp';
 
 test('testUi', async () => {
   const page = await newSkyrampPlaywrightPage();
+  const errors: Error[] = [];
+  page.on('pageerror', (err) => errors.push(err));
 
   // --- login ---
   await page.goto('/login');
@@ -25,4 +27,11 @@ test('testUi', async () => {
   await expect(confirm).toBeEnabled();
   await confirm.click();
   await page.waitForTimeout(2000);
+
+  // Verify the newly created row carries the stable data-row-id attribute added by this PR
+  const createdRow = page.locator('tr[data-row-id]').first();
+  await expect(createdRow).toBeVisible();
+  await expect(createdRow).toHaveAttribute('data-row-id', /.+/);
+
+  expect(errors).toHaveLength(0);
 });
