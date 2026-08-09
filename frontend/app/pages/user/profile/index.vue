@@ -99,23 +99,6 @@
             {{ $t('profile.user-settings-description') }}
           </UserProfileLinkCard>
         </v-col>
-        <AdvancedOnly>
-          <v-col
-            cols="12"
-            sm="12"
-            md="6"
-          >
-            <UserProfileLinkCard
-              :link="{ text: $t('profile.manage-your-api-tokens'), to: `/user/profile/api-tokens` }"
-              image="/svgs/manage-api-tokens.svg"
-            >
-              <template #title>
-                {{ $t('settings.token.api-tokens') }}
-              </template>
-              {{ $t('profile.api-tokens-description') }}
-            </UserProfileLinkCard>
-          </v-col>
-        </AdvancedOnly>
       </v-row>
     </section>
     <v-divider class="my-7" />
