@@ -97,3 +97,11 @@ class ReadCookBook(UpdateCookBook):
 
 class CookBookPagination(PaginationBase):
     items: list[ReadCookBook]
+
+
+class CookBookNutritionSummary(MealieModel):
+    recipe_count: int = 0
+    total_calories: float = 0
+    avg_calories: float = 0
+
+    model_config = ConfigDict(from_attributes=True)
