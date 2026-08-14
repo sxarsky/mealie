@@ -12,7 +12,7 @@ from mealie.routes._base.mixins import HttpRepo
 from mealie.routes._base.routers import MealieCrudRoute
 from mealie.schema import mapper
 from mealie.schema.cookbook import CreateCookBook, ReadCookBook, SaveCookBook, UpdateCookBook
-from mealie.schema.cookbook.cookbook import CookBookPagination
+from mealie.schema.cookbook.cookbook import CookBookCalorieTotal, CookBookPagination
 from mealie.schema.response.pagination import PaginationQuery
 from mealie.services.event_bus_service.event_types import (
     EventCookbookBulkData,
@@ -33,6 +33,10 @@ class GroupCookbookController(BaseCrudController):
     @cached_property
     def group_cookbooks(self):
         return get_repositories(self.session, group_id=self.group_id, household_id=None).cookbooks
+
+    @cached_property
+    def group_recipes(self):
+        return get_repositories(self.session, group_id=self.group_id, household_id=None).recipes
 
     def registered_exceptions(self, ex: type[Exception]) -> str:
         registered = {
@@ -118,6 +122,38 @@ class GroupCookbookController(BaseCrudController):
             raise HTTPException(status_code=404)
 
         return cookbook
+
+    @router.get("/{item_id}/calories", response_model=CookBookCalorieTotal)
+    def get_calorie_total(self, item_id: UUID4 | str):
+        if isinstance(item_id, UUID):
+            match_attr = "id"
+        else:
+            try:
+                UUID(item_id)
+                match_attr = "id"
+            except ValueError:
+                match_attr = "slug"
+
+        cookbook = self.group_cookbooks.get_one(item_id, match_attr)
+        if cookbook is None:
+            raise HTTPException(status_code=404)
+
+        # Add up the calories across the cookbook's recipes for an at-a-glance figure.
+        recipes = self.group_recipes.by_user(self.user.id).page_all(
+            pagination=PaginationQuery(),
+            cookbook=cookbook,
+        )
+
+        total_calories = 0.0
+        for recipe_summary in recipes.items:
+            recipe = self.group_recipes.get_one(recipe_summary.slug)
+            if recipe and recipe.nutrition and recipe.nutrition.calories:
+                try:
+                    total_calories += float(recipe.nutrition.calories)
+                except (TypeError, ValueError):
+                    continue
+
+        return CookBookCalorieTotal(total_calories=total_calories)
 
     @router.put("/{item_id}", response_model=ReadCookBook)
     def update_one(self, item_id: str, data: CreateCookBook):
