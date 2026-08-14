@@ -10,6 +10,7 @@ from mealie.routes._base.routers import MealieCrudRoute
 from mealie.schema import mapper
 from mealie.schema.recipe.recipe_ingredient import (
     CreateIngredientFood,
+    FoodDeleteResponse,
     IngredientFood,
     IngredientFoodPagination,
     MergeFood,
@@ -72,7 +73,10 @@ class IngredientFoodsController(BaseUserController):
         data = mapper.cast(data, SaveIngredientFood, group_id=self.group_id)
         return self.mixins.update_one(data, item_id)
 
-    @router.delete("/{item_id}", response_model=IngredientFood)
+    @router.delete("/{item_id}", response_model=FoodDeleteResponse)
     def delete_one(self, item_id: UUID4):
         self.checks.can_organize()
-        return self.mixins.delete_one(item_id)
+        # Report how many recipes reference this food before it is removed.
+        affected_recipes = self.repo.count_affected_recipes(item_id)
+        self.mixins.delete_one(item_id)
+        return FoodDeleteResponse(id=item_id, affected_recipes=affected_recipes)

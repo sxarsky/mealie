@@ -137,6 +137,13 @@ class IngredientFoodPagination(PaginationBase):
     items: list[IngredientFood]
 
 
+class FoodDeleteResponse(MealieModel):
+    id: UUID4
+    affected_recipes: int = 0
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class CreateIngredientUnitAlias(MealieModel):
     name: str
 
