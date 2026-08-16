@@ -3,6 +3,7 @@ from functools import cached_property
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import UUID4
 
+from mealie.db.models.recipe.ingredient import IngredientFoodModel
 from mealie.routes._base.base_controllers import BaseUserController
 from mealie.routes._base.controller import controller
 from mealie.routes._base.mixins import HttpRepo
@@ -72,7 +73,24 @@ class IngredientFoodsController(BaseUserController):
         data = mapper.cast(data, SaveIngredientFood, group_id=self.group_id)
         return self.mixins.update_one(data, item_id)
 
+    def _reconcile_references(self, item_id: UUID4) -> None:
+        """Clear references to a food before it is removed.
+
+        A food can be referenced from more than one place, so those references
+        are reconciled first to avoid leaving rows pointing at a food that no
+        longer exists.
+        """
+        food = self.session.query(IngredientFoodModel).filter(IngredientFoodModel.id == item_id).one_or_none()
+        if food is None:
+            return
+
+        # Detach the food from every household that currently has it on hand.
+        food.households_with_ingredient_food = []
+
+        self.session.commit()
+
     @router.delete("/{item_id}", response_model=IngredientFood)
     def delete_one(self, item_id: UUID4):
         self.checks.can_organize()
+        self._reconcile_references(item_id)
         return self.mixins.delete_one(item_id)
