@@ -27,6 +27,7 @@ from mealie.core import exceptions
 from mealie.core.dependencies import (
     get_temporary_zip_path,
 )
+from mealie.db.models.recipe.recipe import RecipeModel
 from mealie.pkgs import cache
 from mealie.repos.all_repositories import get_repositories
 from mealie.routes._base import controller
@@ -411,6 +412,44 @@ class RecipeController(BaseRecipeController):
 
         # Response is returned directly, to avoid validation and improve performance
         return JSONBytes(content=json_compatible_response)
+
+    @router.get("/active", response_model=list[RecipeSummary])
+    def get_active_recipes(self):
+        """Return the recipes in the current group that have not been archived."""
+        recipes = (
+            self.session.query(RecipeModel)
+            .filter(RecipeModel.group_id == self.group_id)
+            .filter(RecipeModel.is_archived == False)  # noqa: E712
+            .order_by(RecipeModel.name)
+            .all()
+        )
+        return [RecipeSummary.model_validate(recipe) for recipe in recipes]
+
+    def _set_archived(self, slug: str, archived: bool) -> Recipe:
+        recipe = (
+            self.session.query(RecipeModel)
+            .filter(RecipeModel.group_id == self.group_id)
+            .filter(RecipeModel.slug == slug)
+            .one_or_none()
+        )
+        if recipe is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=ErrorResponse.respond(message="No Entry Found")
+            )
+
+        recipe.is_archived = archived
+        self.session.commit()
+        return self.service.get_one(slug)
+
+    @router.put("/{slug}/archive", response_model=Recipe)
+    def archive_one(self, slug: str = Path(..., description="A recipe's slug")):
+        """Mark a recipe as archived so it is hidden from the active recipes listing."""
+        return self._set_archived(slug, True)
+
+    @router.put("/{slug}/restore", response_model=Recipe)
+    def restore_one(self, slug: str = Path(..., description="A recipe's slug")):
+        """Restore an archived recipe back into the active recipes listing."""
+        return self._set_archived(slug, False)
 
     @router.get("/{slug}", response_model=Recipe)
     def get_one(self, slug: str = Path(..., description="A recipe's slug or id")):

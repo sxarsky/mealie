@@ -81,6 +81,8 @@ class RecipeModel(SqlAlchemyBase, BaseMixins):
     name: FilterableColumn[str] = mapped_column(sa.String, nullable=False)
     description: FilterableColumn[str | None] = mapped_column(sa.String)
 
+    is_archived: FilterableColumn[bool | None] = mapped_column(sa.Boolean, default=False, index=True)
+
     image: FilterableColumn[str | None] = mapped_column(sa.String)
 
     # Time Related Properties
