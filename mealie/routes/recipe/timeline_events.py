@@ -19,6 +19,7 @@ from mealie.schema.recipe.recipe_timeline_events import (
 )
 from mealie.schema.recipe.request_helpers import UpdateImageResponse
 from mealie.schema.response.pagination import PaginationQuery
+from mealie.schema.response.responses import SuccessResponse
 from mealie.services import urls
 from mealie.services.event_bus_service.event_types import EventOperation, EventRecipeTimelineEventData, EventTypes
 from mealie.services.recipe.recipe_data_service import RecipeDataService
@@ -85,6 +86,32 @@ class RecipeTimelineEventsController(BaseCrudController):
         )
 
         return event
+
+    @router.delete("/bulk", response_model=SuccessResponse)
+    def delete_all_for_recipe(self, recipe_id: UUID4):
+        """Remove every timeline event for a recipe, along with any image stored against it."""
+        recipe = self.group_recipes.get_one(recipe_id, "id")
+        if not recipe:
+            raise HTTPException(status_code=404, detail="recipe not found")
+
+        events = self.repo.multi_query({"recipe_id": recipe_id}, limit=None)
+
+        removed = 0
+        for event in events:
+            if not event.image_dir.exists():
+                self.mixins.delete_one(event.id)
+                removed += 1
+                continue
+
+            try:
+                shutil.rmtree(event.image_dir)
+            except OSError:
+                # the image could not be removed; leave the event so the next pass can retry
+                continue
+
+            removed += 1
+
+        return SuccessResponse.respond(f"removed {removed} timeline events")
 
     @router.get("/{item_id}", response_model=RecipeTimelineEventOut)
     def get_one(self, item_id: UUID4):
