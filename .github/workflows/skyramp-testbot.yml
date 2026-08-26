@@ -41,6 +41,7 @@ jobs:
         with:
           skyrampLicenseFile: ${{ secrets.SKYRAMP_LICENSE_FILE }}
           anthropicApiKey: ${{ secrets.SKYRAMP_TESTBOT_API_KEY }}
+          model: opus
           githubToken: ${{ steps.skyramp-testbot-app-token.outputs.token }}
           targetSetupCommand: './deployment-testbot/setup.sh'
           targetReadyCheckCommand: 'curl -f http://localhost:9000/api/app/about'
