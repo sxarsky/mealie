@@ -7,7 +7,7 @@
       <div class="d-flex justify-center mb-2">
         <v-text-field
           ref="input"
-          data-testid="explorer-search-input"
+          data-testid="recipe-search-field"
           v-model="state.search"
           variant="outlined"
           hide-details
@@ -74,6 +74,19 @@
             </v-list>
           </v-card>
         </v-menu>
+
+        <!-- Clear all filters -->
+        <v-btn
+          data-testid="explorer-clear-filters"
+          size="small"
+          color="accent"
+          @click="reset"
+        >
+          <v-icon size="small" start>
+            {{ $globals.icons.broom }}
+          </v-icon>
+          {{ $t("general.clear") }}
+        </v-btn>
 
         <!-- Settings -->
         <v-menu
