@@ -1,46 +1,5 @@
 <template>
   <div>
-    <!-- Merge Dialog -->
-    <BaseDialog
-      v-model="mergeDialog"
-      :icon="$globals.icons.units"
-      :title="$t('data-pages.units.combine-unit')"
-      can-confirm
-      @confirm="mergeUnits"
-    >
-      <v-card-text>
-        <i18n-t keypath="data-pages.units.combine-unit-description">
-          <template #source-unit-will-be-deleted>
-            <strong> {{ $t('data-pages.recipes.source-unit-will-be-deleted') }} </strong>
-          </template>
-        </i18n-t>
-
-        <v-autocomplete
-          v-model="fromUnit"
-          return-object
-          :items="unitStore"
-          :custom-filter="normalizeFilter"
-          item-title="name"
-          :label="$t('data-pages.units.source-unit')"
-          class="mt-2"
-        />
-        <v-autocomplete
-          v-model="toUnit"
-          return-object
-          :items="unitStore"
-          :custom-filter="normalizeFilter"
-          item-title="name"
-          :label="$t('data-pages.units.target-unit')"
-        />
-
-        <template v-if="canMerge && fromUnit && toUnit">
-          <div class="text-center">
-            {{ $t('data-pages.units.merging-unit-into-unit', [fromUnit.name, toUnit.name]) }}
-          </div>
-        </template>
-      </v-card-text>
-    </BaseDialog>
-
     <!-- Alias Sub-Dialog -->
     <RecipeDataAliasManagerDialog
       v-if="editForm.data"
@@ -108,15 +67,6 @@
       @delete-one="unitActions.deleteOne"
       @bulk-action="handleBulkAction"
     >
-      <template #table-button-row>
-        <BaseButton
-          :icon="$globals.icons.externalLink"
-          @click="mergeDialog = true"
-        >
-          {{ $t('data-pages.combine') }}
-        </BaseButton>
-      </template>
-
       <template #[`item.useAbbreviation`]="{ item }">
         <v-icon :color="item.useAbbreviation ? 'success' : undefined">
           {{ item.useAbbreviation ? $globals.icons.check : $globals.icons.close }}
