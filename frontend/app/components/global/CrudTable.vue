@@ -224,7 +224,8 @@ const search = ref("");
 
 <style>
 .clip-width {
-  max-width: 400px;
+  max-width: 480px;
+  margin-bottom: 8px;
 }
 .v-btn--disabled {
   opacity: 0.5 !important;
