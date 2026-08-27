@@ -1101,6 +1101,8 @@
     "enable-advanced-content-description": "Enables advanced features like Recipe Scaling, API keys, Webhooks, and Data Management. Don't worry, you can always change this later",
     "favorite-recipes": "Favorite Recipes",
     "email-or-username": "Email or Username",
+    "account-identifier": "Account",
+    "account-password": "Account password",
     "remember-me": "Remember Me",
     "please-enter-your-email-and-password": "Please enter your email and password",
     "invalid-credentials": "Invalid Credentials",

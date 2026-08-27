@@ -69,7 +69,7 @@
             autofocus
             autocomplete="username"
             name="username"
-            :label="$t('user.email-or-username')"
+            :label="$t('user.account-identifier')"
             type="text"
           />
           <v-text-field
@@ -82,7 +82,7 @@
             flat
             autocomplete="current-password"
             name="password"
-            :label="$t('user.password')"
+            :label="$t('user.account-password')"
             :type="inputType"
             @click:append-inner="togglePasswordShow"
           />
@@ -105,7 +105,7 @@
                 class="rounded-xl"
                 block
               >
-                {{ $t("user.login") }}
+                {{ $t("user.sign-in") }}
               </v-btn>
             </div>
           </v-card-actions>
