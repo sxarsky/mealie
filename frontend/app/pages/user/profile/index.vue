@@ -7,7 +7,7 @@
         :user-id="user.id"
       />
 
-      <h2 class="text-h4 text-center">
+      <h2 class="text-h4 text-center" data-testid="profile-welcome-heading">
         {{ $t('profile.welcome-user', [user.fullName]) }}
       </h2>
       <p class="subtitle-1 mb-0 text-center">
